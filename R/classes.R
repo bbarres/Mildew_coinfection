@@ -44,7 +44,7 @@ OccupancyMildew <- setRefClass(
       return(merge(mildew, rainfall, sort=FALSE, all.x=TRUE, all.y=FALSE, by=c("ID", "Year")))
     },  
     
-    loadRawData = function(mildewFile="SO_with_covariates_univariate_2001_2012.csv") {
+    loadRawData = function(mildewFile="stat_patch2012.txt") {
       message("Loading ", response, " data...")
       
       mildew <- read.csv(file.path(basePath, mildewFile))
