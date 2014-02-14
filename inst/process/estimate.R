@@ -4,6 +4,25 @@ library(Mildew)
 if (!exists("basePath") | !exists("runParallel"))
   stop("Please set basePath and runParallel parameters.")
 
+
+basePath<-"C:/HY-Data/BBARRES/documents/Work/Rfichiers/Podosphaera/coinfection"
+runParallel<-FALSE
+
+coin<-CoinfectionMildew$new(basePath=basePath, runParallel=runParallel)$loadData()
+coin.mesh.params <- list(min.angle=20, max.edge=c(3400,10000), cutoff=1000, coords.scale=1e6)
+coin.connectivity.scale <- 2000
+coin.fixed.effects <- "Area_real + PA_2011 + connec2012 + number_MLG"
+
+estimateOrdinaryLogisticModel <- function(mildew, connectivity.scale, fixed.effects, tag="", type="glm") {
+  mildew$addLandscapeConnectivity(connectivity.scale=connectivity.scale)
+  mildew$addPopulationConnectivity(connectivity.scale=connectivity.scale)
+  mildew$setupModel(type=type, fixed.effects=fixed.effects)
+  mildew$estimate(tag=tag, saveToFile=TRUE)
+}
+
+zz<-estimateOrdinaryLogisticModel(coin, connectivity.scale=coin.connectivity.scale, fixed.effects=coin.fixed.effects)
+
+
 occ <- OccupancyMildew$new(basePath=basePath, runParallel=runParallel)$loadData()
 col <- ColonizationMildew$new(basePath=basePath, runParallel=runParallel)$loadData()
 ext <- ExtinctionMildew$new(basePath=basePath, runParallel=runParallel)$loadData()

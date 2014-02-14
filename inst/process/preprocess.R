@@ -9,6 +9,7 @@ if (!exists("basePath") | !exists("runParallel"))
 coinfection<- CoinfectionMildew$new(basePath="C:/HY-Data/BBARRES/documents/Work/Rfichiers/Podosphaera/coinfection")
 coinfection$loadRawData(mildewFile="stat_patch2012.txt")
 coinfection$data
+coinfection$saveData()
 
 
 
