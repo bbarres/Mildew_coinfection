@@ -11,11 +11,10 @@ CoinfectionMildew<- setRefClass(
                                    "numeric","numeric","numeric","numeric","numeric","factor","character","character",
                                    "numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric",
                                    "numeric","numeric","factor","factor","factor","factor","factor","factor",
-                                   "factor","factor","factor","factor","factor","factor","factor","numeric",
+                                   "factor","factor","factor","factor","factor","factor","factor","factor","numeric",
                                    "factor","numeric","numeric","numeric","factor","numeric","numeric","numeric",
                                    "numeric","factor","factor"))
-      
-      
+     colnames(temp)[1]<-"ID"      
      data<<-temp
       #data<<-data.frame(x=c(1,2,3,4))
     })
