@@ -17,6 +17,15 @@ CoinfectionMildew<- setRefClass(
      colnames(temp)[1]<-"ID"      
      data<<-temp
       #data<<-data.frame(x=c(1,2,3,4))
+    },
+    
+    loadBorder = function(fileName=file.path(basePath, "alandmap_rough.shp")) {
+      library(sp)
+      library(maptools)
+      library(rgdal)
+      Aland<-readShapePoly(fileName,proj4string=CRS("+init=epsg:2393"))  
+      Aland<-spTransform(Aland,CRS("+init=epsg:3067"))
+      return(Aland)
     })
   
   )

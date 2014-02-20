@@ -269,7 +269,7 @@ OccupancyMildew <- setRefClass(
       covariates$logDistance_to_shore <<- rescale(covariates$logDistance_to_shore)
     },
     
-    setupModel = function(type, scale.covariates=TRUE, fixed.effects, mesh.params, plot=FALSE) {
+    setupModel = function(type, scale.covariates=TRUE, fixed.effects, mesh.params, plot=FALSE, exclude.covariates) {
       library(INLA)
       
       type <<- type
@@ -294,7 +294,8 @@ OccupancyMildew <- setRefClass(
         model <<- as.formula(paste(c("y ~ -1 + intercept", paste(fixed.effects, collapse=" + "), random.effects), collapse=" + "))
         #data$intercept <- 1
         #covariates <<- as.data.frame(model.matrix(model, data=data[,!names(data) %in% c("y","PA","Col","Ext","persistent","logfallPLM2")], na.action=na.fail))
-        covariates <<- as.data.frame(model.matrix(~-1+., data=data[,!names(data) %in% c("y","PA","Col","Ext","persistent","logfallPLM2")], na.action=na.fail))
+        #covariates <<- as.data.frame(model.matrix(~-1+., data=data[,!names(data) %in% c("y","PA","Col","Ext","persistent","logfallPLM2")], na.action=na.fail))
+        covariates <<- as.data.frame(model.matrix(~-1+., data=data[,!names(data) %in% exclude.covariates], na.action=na.fail))
 
         if (nrow(covariates) != nrow(data))
           stop("Missing data (NAs) not allowed in covariates.")
@@ -348,13 +349,14 @@ OccupancyMildew <- setRefClass(
     
     invlogit = function(x) exp(x)/(1+exp(x)),
 
-    estimate = function(tag, saveToFile=F) {
+    estimate = function(tag, saveToFile=F, family, Ntrials) {
       tag <<- tag
       
       message("Estimating model ", model[2], " ", model[1], " ", model[3], "...")
       
       if (type == "glm") {
-        result <<- inla(model, family="binomial",
+        result <<- inla(model, family=family,
+                      Ntrials=Ntrials,                      
                        data=cbind(covariates, intercept=1, y=as.numeric(data$y)),
                        verbose=TRUE,
                        control.predictor=list(compute=TRUE),
@@ -366,7 +368,8 @@ OccupancyMildew <- setRefClass(
         data$mu <<- invlogit(result$summary.linear.predictor$mean)
       }
       else if (type == "temporalreplicate") {
-        result <<- inla(model, family="binomial",
+        result <<- inla(model, family=family,
+                        Ntrials=Ntrials,
                        data=cbind(covariates, intercept=1, y=as.numeric(data$y)),
                        verbose=TRUE,
                        control.predictor=list(compute=TRUE),
@@ -395,7 +398,8 @@ OccupancyMildew <- setRefClass(
             tag="pred")
         }
         
-        result <<- inla(model, family="binomial", data=inla.stack.data(data.stack),
+        result <<- inla(model, family=family, data=inla.stack.data(data.stack),
+                        Ntrials=Ntrials,
                        verbose=TRUE,
                        control.predictor=list(A=inla.stack.A(data.stack), compute=TRUE),
                        control.compute=list(cpo=FALSE, dic=TRUE))
