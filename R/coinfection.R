@@ -14,7 +14,10 @@ CoinfectionMildew<- setRefClass(
                                    "factor","factor","factor","factor","factor","factor","factor","factor","numeric",
                                    "factor","numeric","numeric","numeric","factor","numeric","numeric","numeric",
                                    "numeric","factor","factor"))
-     colnames(temp)[1]<-"ID"      
+     colnames(temp)[1]<-"ID"
+     temp<-temp[,c("ID","number_coinf","number_genotyped","number_pure","number_MLG","number_pure_new",
+                   "Longitude","Latitude","Area_real","PA_2011","connec2012","cumulative_sum","road_PA",
+                   "Distance_to_shore")]
      data<<-temp
       #data<<-data.frame(x=c(1,2,3,4))
     },
