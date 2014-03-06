@@ -40,6 +40,7 @@ estimateOrdinaryLogisticModel <- function(mildew, connectivity.scale, fixed.effe
 
 estimateOrdinaryLogisticModel(coin, connectivity.scale=coin.connectivity.scale, fixed.effects=coin.fixed.effects,
                               tag="benoit")
+coin$summaryResult()
 
 
 estimateInterceptOnlyRandomEffectModel <- function(mildew, connectivity.scale, mesh.params, tag="", type) {
@@ -50,8 +51,7 @@ estimateInterceptOnlyRandomEffectModel <- function(mildew, connectivity.scale, m
   mildew$data$y <- mildew$data$number_coinf
   Ntrials <- mildew$data$number_genotyped
   
-  mildew$data <- mildew$data[,c("Year", "Longitude","Latitude","y","Area_real","PA_2011","connec2012","number_MLG",
-                                "cumulative_sum","road_PA","Distance_to_shore")]
+  mildew$data <- mildew$data[,c("Year", "Longitude","Latitude","y","Area_real","PA_2011","connec2012","number_MLG")]
   
   x <- mildew$setupModel(type=type,scale.covariates=FALSE, mesh.params=mesh.params, 
                          exclude.covariates=c("number_coinf","number_genotyped","Year","Longitude","Latitude","y"))
@@ -63,6 +63,7 @@ estimateInterceptOnlyRandomEffectModel <- function(mildew, connectivity.scale, m
 
 estimateInterceptOnlyRandomEffectModel(coin, connectivity.scale=coin.connectivity.scale,
                                        mesh.params=coin.mesh.params, type="spatialonly",tag="intercepbenoit")
+coin$summaryResult()
 
 
 estimateRandomEffectModel <- function(mildew, connectivity.scale, fixed.effects, mesh.params, tag="", type) {
@@ -73,8 +74,7 @@ estimateRandomEffectModel <- function(mildew, connectivity.scale, fixed.effects,
   mildew$data$y <- mildew$data$number_coinf
   Ntrials <- mildew$data$number_genotyped
 
-  mildew$data <- mildew$data[,c("Year", "Longitude","Latitude","y","Area_real","PA_2011","connec2012","number_MLG",
-                                "cumulative_sum","road_PA","Distance_to_shore")]
+  mildew$data <- mildew$data[,c("Year", "Longitude","Latitude","y","Area_real","PA_2011","connec2012","number_MLG")]
   
   x <- mildew$setupModel(type=type, fixed.effects=fixed.effects, scale.covariates=FALSE, mesh.params=mesh.params, 
                          exclude.covariates=c("number_coinf","number_genotyped","Year","Longitude","Latitude","y"))
@@ -84,9 +84,165 @@ estimateRandomEffectModel <- function(mildew, connectivity.scale, fixed.effects,
   mildew$summaryHyperparameters()
 }
 
-
 estimateRandomEffectModel(coin, connectivity.scale=coin.connectivity.scale, fixed.effects=coin.fixed.effects,
                           mesh.params=coin.mesh.params, type="spatialonly",tag="benoit")
 coin$summaryResult()
+
+
+
+getPosteriorRange = function(mildew, title) {
+  library(INLA)
+  spde.result <- inla.spde2.result(mildew$result, "s", mildew$spde)
+  range.t <- inla.tmarginal(function(x) x * mildew$coords.scale / 1000, spde.result$marginals.range.nominal$range.nominal.1)
+  return(cbind(Response=title, as.data.frame(unclass(range.t))))
+}
+
+temp<-getPosteriorRange(coin,"coinfection")
+plot(temp$x,temp$y)
+
+
+
+
+
+#Analyse of the link between coinfection and evolution of the prevalence of the disease in patches between 
+#spring and autumn
+
+varpreval<-VarprevalMildew$new(basePath=basePath, runParallel=runParallel)$loadData()
+varpreval.mesh.params <- list(min.angle=20, max.edge=c(3000,10000), cutoff=1000, coords.scale=1e6)
+varpreval.connectivity.scale <- 2000
+varpreval.fixed.effects<-"connec2012+perccoinf"
+varpreval.fixed.effects<-"perccoinf"
+
+estimateRandomEffectModel <- function(mildew, connectivity.scale, fixed.effects, mesh.params, tag="", type) {
+  
+  missingIndex <- complete.cases(mildew$data)
+  mildew$data <- mildew$data[missingIndex,]
+  mildew$data <- mildew$data[mildew$data$RA_S2012!=0,]
+  mildew$data <- cbind(mildew$data,"perccoinf"=mildew$data$number_coinf/mildew$data$number_genotyped)
+  mildew$data$Year <- 2000
+  mildew$data$y <- mildew$data$RA_F2012-mildew$data$RA_S2012
+  
+  mildew$data <- mildew$data[,c("Year", "Longitude","Latitude","y","Area_real","connec2012","number_MLG",
+                                "perccoinf")]
+  
+  x <- mildew$setupModel(type=type, fixed.effects=fixed.effects, scale.covariates=FALSE, mesh.params=mesh.params, 
+                         exclude.covariates=c("number_coinf","number_genotyped","Year","Longitude","Latitude","y"))
+  mildew$plotMesh()
+  
+  mildew$estimate(tag=tag, saveToFile=TRUE,family="gaussian")
+  mildew$summaryHyperparameters()
+}
+
+
+estimateRandomEffectModel(varpreval, connectivity.scale=varpreval.connectivity.scale, fixed.effects=varpreval.fixed.effects,
+                          mesh.params=varpreval.mesh.params, type="spatialonly",tag="benoit")
+varpreval$summaryResult()
+
+
+estimateInterceptOnlyRandomEffectModel <- function(mildew, connectivity.scale, mesh.params, tag="", type) {
+  
+  missingIndex <- complete.cases(mildew$data)
+  mildew$data <- mildew$data[missingIndex,]
+  mildew$data <- mildew$data[mildew$data$RA_S2012!=0,]
+  mildew$data <- cbind(mildew$data,"perccoinf"=mildew$data$number_coinf/mildew$data$number_genotyped)
+  mildew$data$Year <- 2000
+  mildew$data$y <- mildew$data$RA_F2012-mildew$data$RA_S2012
+  
+  mildew$data <- mildew$data[,c("Year", "Longitude","Latitude","y","Area_real","connec2012","number_MLG",
+                                "perccoinf")]
+  
+  x <- mildew$setupModel(type=type, scale.covariates=FALSE, mesh.params=mesh.params, 
+                         exclude.covariates=c("number_coinf","number_genotyped","Year","Longitude","Latitude","y"))
+  mildew$plotMesh()
+  
+  mildew$estimate(tag=tag, saveToFile=TRUE,family="gaussian")
+  mildew$summaryHyperparameters()
+}
+
+estimateInterceptOnlyRandomEffectModel(varpreval, connectivity.scale=varpreval.connectivity.scale,
+                                       mesh.params=varpreval.mesh.params, type="spatialonly",tag="benoit")
+varpreval$summaryResult()
+
+
+
+
+
+
+
+
+#analysis of the effect of coinfection on the P/A of powdery mildew the next year
+basePath<-"C:/HY-Data/BBARRES/documents/Work/Rfichiers/Podosphaera/coinfection"
+runParallel<-FALSE
+
+survi<-Survival2013Mildew$new(basePath=basePath, runParallel=runParallel)$loadData()
+survi.mesh.params <- list(min.angle=20, max.edge=c(3000,10000), cutoff=1000, coords.scale=1e6)
+survi.connectivity.scale <- 2000
+survi.fixed.effects<-"connec2012+PA_20111+number_coinf+Area_real"
+survi.fixed.effects<-"number_coinf+PA_20111"
+
+estimateOrdinaryLogisticModel <- function(mildew, connectivity.scale, fixed.effects, tag="", type="glm") {
+  #mildew$addLandscapeConnectivity(connectivity.scale=connectivity.scale)
+  
+  missingIndex <- complete.cases(mildew$data)
+  mildew$data <- mildew$data[missingIndex,]
+  mildew$data$Year <- 2000
+  mildew$data$y <- as.numeric(as.character(mildew$data$PA_2013))
+  Ntrials <-rep(1,dim(mildew$data)[1])
+  
+  x <- mildew$setupModel(type=type, fixed.effects=fixed.effects, scale.covariates=FALSE,
+                         exclude.covariates=c("number_genotyped","Year","Longitude","Latitude","y"))
+  mildew$estimate(tag=tag, saveToFile=TRUE, family="binomial", Ntrials=Ntrials)
+}
+
+estimateOrdinaryLogisticModel(survi, connectivity.scale=survi.connectivity.scale, fixed.effects=survi.fixed.effects,
+                              tag="benoit")
+survi$summaryResult()
+
+
+estimateInterceptOnlyRandomEffectModel <- function(mildew, connectivity.scale, mesh.params, tag="", type) {
+  
+  missingIndex <- complete.cases(mildew$data)
+  mildew$data <- mildew$data[missingIndex,]
+  mildew$data$Year <- 2000
+  mildew$data$y <- as.numeric(as.character(mildew$data$PA_2013))
+  Ntrials <-rep(1,dim(mildew$data)[1])
+  
+  mildew$data <- mildew$data[,c("Year", "Longitude","Latitude","y","Area_real","PA_2011","connec2012","number_MLG")]
+  
+  x <- mildew$setupModel(type=type,scale.covariates=FALSE, mesh.params=mesh.params, 
+                         exclude.covariates=c("number_genotyped","Year","Longitude","Latitude","y"))
+  mildew$plotMesh()
+  
+  mildew$estimate(tag=tag, saveToFile=TRUE, family="binomial", Ntrials=Ntrials)
+  mildew$summaryHyperparameters()
+}
+
+estimateInterceptOnlyRandomEffectModel(survi, connectivity.scale=survi.connectivity.scale,
+                                       mesh.params=survi.mesh.params, type="spatialonly",tag="intercepbenoit")
+survi$summaryResult()
+
+
+estimateRandomEffectModel <- function(mildew, connectivity.scale, fixed.effects, mesh.params, tag="", type) {
+  
+  missingIndex <- complete.cases(mildew$data)
+  mildew$data <- mildew$data[missingIndex,]
+  mildew$data$Year <- 2000
+  mildew$data$y <- as.numeric(as.character(mildew$data$PA_2013))
+  Ntrials <-rep(1,dim(mildew$data)[1])
+  
+  mildew$data <- mildew$data[,c("Year", "Longitude","Latitude","y","Area_real","PA_2011","connec2012","number_MLG",
+                                "number_coinf")]
+  
+  x <- mildew$setupModel(type=type, fixed.effects=fixed.effects, scale.covariates=FALSE, mesh.params=mesh.params, 
+                         exclude.covariates=c("number_genotyped","Year","Longitude","Latitude","y"))
+  mildew$plotMesh()
+  
+  mildew$estimate(tag=tag, saveToFile=TRUE, family="binomial", Ntrials=Ntrials)
+  mildew$summaryHyperparameters()
+}
+
+estimateRandomEffectModel(survi, connectivity.scale=survi.connectivity.scale, fixed.effects=survi.fixed.effects,
+                          mesh.params=survi.mesh.params, type="spatialonly",tag="benoit")
+survi$summaryResult()
 
 
