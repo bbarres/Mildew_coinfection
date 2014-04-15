@@ -13,7 +13,9 @@ coinfection$saveData()
 
 #dataset with corrected number of MLG
 coinfection<- CoinfectionMildew$new(basePath="C:/HY-Data/BBARRES/documents/Work/Rfichiers/Podosphaera/coinfection")
-coinfection$loadRawData(mildewFile="stat_patch2012corr.txt")
+coinfection$loadRawData(mildewFile="stat_patch2012corr.txt",
+                        selecfact=c("ID","number_coinf","number_genotyped","number_pure","number_MLG","number_pure_new",
+                                    "Longitude","Latitude","Area_real","PA_2011","connec2012","RA_F2012","AA_F2012"))
 coinfection$data
 coinfection$saveData()
 

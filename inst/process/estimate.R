@@ -12,7 +12,8 @@ coin<-CoinfectionMildew$new(basePath=basePath, runParallel=runParallel)$loadData
 coin.mesh.params <- list(min.angle=20, max.edge=c(3400,10000), cutoff=1000, coords.scale=1e6)
 coin.connectivity.scale <- 2000
 coin.fixed.effects <- "Area_real + PA_20111 + connec2012 + number_MLG + Distance_to_shore + road_PA1 + cumulative_sum"
-coin.fixed.effects <- "PA_20111 + connec2012 + number_MLG"
+coin.fixed.effects <- "PA_20111 + connec2012 + number_MLG + RA_F2012"
+coin.fixed.effects <- "PA_20111 + connec2012 + number_MLG + AA_F2012"
 coin.fixed.effects <- "PA_20111 + connec2012"
 coin.fixed.effects <- "PA_20111 + number_MLG"
 coin.fixed.effects <- "connec2012 + number_MLG"
@@ -73,8 +74,7 @@ estimateRandomEffectModel <- function(mildew, connectivity.scale, fixed.effects,
   mildew$data$Year <- 2000
   mildew$data$y <- mildew$data$number_coinf
   Ntrials <- mildew$data$number_genotyped
-
-  mildew$data <- mildew$data[,c("Year", "Longitude","Latitude","y","Area_real","PA_2011","connec2012","number_MLG")]
+  mildew$data <- mildew$data[,c("Year", "Longitude","Latitude","y","Area_real","PA_2011","connec2012","number_MLG","RA_F2012","AA_F2012")]
   
   x <- mildew$setupModel(type=type, fixed.effects=fixed.effects, scale.covariates=FALSE, mesh.params=mesh.params, 
                          exclude.covariates=c("number_coinf","number_genotyped","Year","Longitude","Latitude","y"))
@@ -97,8 +97,8 @@ getPosteriorRange = function(mildew, title) {
   return(cbind(Response=title, as.data.frame(unclass(range.t))))
 }
 
-temp<-getPosteriorRange(coin,"coinfection")
-plot(temp$x,temp$y)
+coinrangepost<-getPosteriorRange(coin,"coinfection")
+plot(coinrangepost$x,coinrangepost$y)
 
 
 
@@ -246,3 +246,12 @@ estimateRandomEffectModel(survi, connectivity.scale=survi.connectivity.scale, fi
 survi$summaryResult()
 
 
+getPosteriorRange = function(mildew, title) {
+  library(INLA)
+  spde.result <- inla.spde2.result(mildew$result, "s", mildew$spde)
+  range.t <- inla.tmarginal(function(x) x * mildew$coords.scale / 1000, spde.result$marginals.range.nominal$range.nominal.1)
+  return(cbind(Response=title, as.data.frame(unclass(range.t))))
+}
+
+survirangepost<-getPosteriorRange(survi,"coinfection")
+plot(survirangepost$x,survirangepost$y)
