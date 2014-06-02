@@ -24,6 +24,7 @@ coin.fixed.effects <- "number_MLG"
 coin.fixed.effects <- "Distance_to_shore"
 coin.fixed.effects <- "cumulative_sum"
 coin.fixed.effects <- "road_PA1"
+coin.fixed.effects <- "AA_F2012"
 
 estimateOrdinaryLogisticModel <- function(mildew, connectivity.scale, fixed.effects, tag="", type="glm") {
   #mildew$addLandscapeConnectivity(connectivity.scale=connectivity.scale)
@@ -113,14 +114,39 @@ varpreval.connectivity.scale <- 2000
 varpreval.fixed.effects<-"connec2012+perccoinf"
 varpreval.fixed.effects<-"perccoinf"
 
+
+estimateOrdinaryLogisticModel <- function(mildew, connectivity.scale, fixed.effects, tag="", type="glm") {
+  #mildew$addLandscapeConnectivity(connectivity.scale=connectivity.scale)
+  
+  missingIndex <- complete.cases(mildew$data)
+  mildew$data <- mildew$data[missingIndex,]
+  mildew$data <- mildew$data[mildew$data$AA_S2012!=0,]
+  mildew$data <- cbind(mildew$data,"perccoinf"=mildew$data$number_coinf/mildew$data$number_genotyped)
+  mildew$data$Year <- 2000
+  Ntrials<-2
+  mildew$data$y <- mildew$data$AA_F2012-mildew$data$AA_S2012
+  
+  mildew$data <- mildew$data[,c("Year", "Longitude","Latitude","y","Area_real","connec2012","number_MLG",
+                                "perccoinf")]
+  x <- mildew$setupModel(type=type, fixed.effects=fixed.effects, scale.covariates=FALSE,
+                         exclude.covariates=c("number_coinf","number_genotyped","Year","Longitude","Latitude","y"))
+  mildew$estimate(tag=tag, saveToFile=TRUE, family="gaussian", Ntrials=Ntrials)
+}
+
+estimateOrdinaryLogisticModel(varpreval, connectivity.scale=varpreval.connectivity.scale, fixed.effects=varpreval.fixed.effects,
+                              tag="benoit")
+varpreval$summaryResult()
+
+
 estimateRandomEffectModel <- function(mildew, connectivity.scale, fixed.effects, mesh.params, tag="", type) {
   
   missingIndex <- complete.cases(mildew$data)
   mildew$data <- mildew$data[missingIndex,]
-  mildew$data <- mildew$data[mildew$data$RA_S2012!=0,]
+  mildew$data <- mildew$data[mildew$data$AA_S2012!=0,]
   mildew$data <- cbind(mildew$data,"perccoinf"=mildew$data$number_coinf/mildew$data$number_genotyped)
   mildew$data$Year <- 2000
-  mildew$data$y <- mildew$data$RA_F2012-mildew$data$RA_S2012
+  Ntrials<-2
+  mildew$data$y <- mildew$data$AA_F2012-mildew$data$AA_S2012
   
   mildew$data <- mildew$data[,c("Year", "Longitude","Latitude","y","Area_real","connec2012","number_MLG",
                                 "perccoinf")]
@@ -129,7 +155,7 @@ estimateRandomEffectModel <- function(mildew, connectivity.scale, fixed.effects,
                          exclude.covariates=c("number_coinf","number_genotyped","Year","Longitude","Latitude","y"))
   mildew$plotMesh()
   
-  mildew$estimate(tag=tag, saveToFile=TRUE,family="gaussian")
+  mildew$estimate(tag=tag, saveToFile=TRUE,family="gaussian", Ntrials=Ntrials)
   mildew$summaryHyperparameters()
 }
 
@@ -143,10 +169,11 @@ estimateInterceptOnlyRandomEffectModel <- function(mildew, connectivity.scale, m
   
   missingIndex <- complete.cases(mildew$data)
   mildew$data <- mildew$data[missingIndex,]
-  mildew$data <- mildew$data[mildew$data$RA_S2012!=0,]
+  mildew$data <- mildew$data[mildew$data$AA_S2012!=0,]
   mildew$data <- cbind(mildew$data,"perccoinf"=mildew$data$number_coinf/mildew$data$number_genotyped)
   mildew$data$Year <- 2000
-  mildew$data$y <- mildew$data$RA_F2012-mildew$data$RA_S2012
+  Ntrials<-2
+  mildew$data$y <- mildew$data$AA_F2012-mildew$data$AA_S2012
   
   mildew$data <- mildew$data[,c("Year", "Longitude","Latitude","y","Area_real","connec2012","number_MLG",
                                 "perccoinf")]
@@ -155,7 +182,7 @@ estimateInterceptOnlyRandomEffectModel <- function(mildew, connectivity.scale, m
                          exclude.covariates=c("number_coinf","number_genotyped","Year","Longitude","Latitude","y"))
   mildew$plotMesh()
   
-  mildew$estimate(tag=tag, saveToFile=TRUE,family="gaussian")
+  mildew$estimate(tag=tag, saveToFile=TRUE,family="gaussian", Ntrials=Ntrials)
   mildew$summaryHyperparameters()
 }
 
