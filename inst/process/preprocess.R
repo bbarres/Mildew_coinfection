@@ -17,7 +17,7 @@ coinfection<- CoinfectionMildew$new(basePath="C:/HY-Data/BBARRES/documents/Work/
 coinfection$loadRawData(mildewFile="stat_patch2012corr.txt",
                         selecfact=c("ID","number_coinf","number_genotyped","number_pure","number_MLG","number_pure_new",
                                     "Longitude","Latitude","Area_real","PLM2_Sept2012","PA_2011","connec2012","RA_F2012",
-                                    "AA_F2012"))
+                                    "AA_F2012","Distance_to_shore"))
 coinfection$data
 coinfection$saveData()
 #2013
