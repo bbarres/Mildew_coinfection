@@ -109,9 +109,10 @@ plot(coinrangepost$x,coinrangepost$y)
 #spring and autumn
 
 varpreval<-VarprevalMildew$new(basePath=basePath, runParallel=runParallel)$loadData()
+varpreval$data$index <- 1:nrow(varpreval$data)
 varpreval.mesh.params <- list(min.angle=20, max.edge=c(3000,10000), cutoff=1000, coords.scale=1e6)
 varpreval.connectivity.scale <- 2000
-varpreval.fixed.effects<-"connec2012+perccoinf"
+varpreval.fixed.effects<-"connec2012+perccoinf+f(index,model='iid')"
 varpreval.fixed.effects<-"perccoinf"
 
 
@@ -121,7 +122,7 @@ estimateOrdinaryLogisticModel <- function(mildew, connectivity.scale, fixed.effe
   missingIndex <- complete.cases(mildew$data)
   mildew$data <- mildew$data[missingIndex,]
   mildew$data <- mildew$data[mildew$data$AA_S2012!=0,]
-  mildew$data <- cbind(mildew$data,"perccoinf"=mildew$data$number_coinf/mildew$data$number_genotyped)
+  mildew$data <- cbind(mildew$data,"perccoinf"=mildew$data$number_coinf*100/mildew$data$number_genotyped)
   mildew$data$Year <- 2000
   Ntrials<-2
   mildew$data$y <- mildew$data$AA_F2012-mildew$data$AA_S2012
@@ -143,7 +144,7 @@ estimateRandomEffectModel <- function(mildew, connectivity.scale, fixed.effects,
   missingIndex <- complete.cases(mildew$data)
   mildew$data <- mildew$data[missingIndex,]
   mildew$data <- mildew$data[mildew$data$AA_S2012!=0,]
-  mildew$data <- cbind(mildew$data,"perccoinf"=mildew$data$number_coinf/mildew$data$number_genotyped)
+  mildew$data <- cbind(mildew$data,"perccoinf"=mildew$data$number_coinf*100/mildew$data$number_genotyped)
   mildew$data$Year <- 2000
   Ntrials<-2
   mildew$data$y <- mildew$data$AA_F2012-mildew$data$AA_S2012
@@ -165,12 +166,49 @@ estimateRandomEffectModel(varpreval, connectivity.scale=varpreval.connectivity.s
 varpreval$summaryResult()
 
 
+www.r-inla.org
+latent models
+iid model
+
+spde tutorial
+
+#the linear model  "model.ratioperc" is coming from the coinf_glm.R code
+model.ratioperc<-lm((AA_F2012-AA_S2012)~percoinf,data=evolinf4)
+#let's compare the fitted value to the original value
+fitted(model.ratioperc)
+index <- inla.stack.index(varpreval$data.stack, "pred")$data
+temp<-data.frame(obs=varpreval$data$y, pred.inla=varpreval$result$summary.fitted.values$mean[index], pred.lm=fitted(model.ratioperc))
+plot(temp[,1],type="b")
+lines(temp$random)
+lines(temp$fixed*coef(model.ratioperc)[2],col="red")
+
+model.ratioperc
+
+
+temp$random <- as.vector(varpreval$A %*% varpreval$result$summary.random$s$mean)
+temp$fixed <- evolinf4$percoinf
+
+
+#cor(temp$fixed*coef(model.ratioperc)[2],temp$random)
+cor(temp$obs, temp$pred.inla)
+cor(temp$obs, temp$pred.lm)
+cor(temp$obs, temp$random)
+
+
+
+mean((temp[,1]-temp[,2])^2)
+mean((temp[,1]-temp[,3])^2)
+
+
+
+
+
 estimateInterceptOnlyRandomEffectModel <- function(mildew, connectivity.scale, mesh.params, tag="", type) {
   
   missingIndex <- complete.cases(mildew$data)
   mildew$data <- mildew$data[missingIndex,]
   mildew$data <- mildew$data[mildew$data$AA_S2012!=0,]
-  mildew$data <- cbind(mildew$data,"perccoinf"=mildew$data$number_coinf/mildew$data$number_genotyped)
+  mildew$data <- cbind(mildew$data,"perccoinf"=mildew$data$number_coinf*100/mildew$data$number_genotyped)
   mildew$data$Year <- 2000
   Ntrials<-2
   mildew$data$y <- mildew$data$AA_F2012-mildew$data$AA_S2012
