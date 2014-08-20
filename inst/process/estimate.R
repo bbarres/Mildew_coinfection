@@ -76,7 +76,7 @@ estimateRandomEffectModel <- function(mildew, connectivity.scale, fixed.effects,
   mildew$data$Year <- 2000
   mildew$data$y <- mildew$data$number_coinf
   Ntrials <- mildew$data$number_genotyped
-  mildew$data <- mildew$data[,c("Year", "Longitude","Latitude","y","Area_real","PA_2011","connec2012","number_MLG","RA_F2012","AA_F2012")]
+  mildew$data <- mildew$data[,c("Year", "Longitude","Latitude","y","Area_real","PA_2011","connec2012","number_MLG","RA_F2012","AA_F2012","PLM2_Sept2012")]
   
   x <- mildew$setupModel(type=type, fixed.effects=fixed.effects, scale.covariates=FALSE, mesh.params=mesh.params, 
                          exclude.covariates=c("number_coinf","number_genotyped","Year","Longitude","Latitude","y"))
